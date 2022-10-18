@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+
+---
+
+apiVersion: apps/v1
+kind: Deployment7
+metadata:
+  name: simple-web
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simple-web
+  template:
+    metadata:
+      labels:
+        app: simple-web
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+      - name: simple-web
+        image: yeasy/simple-web:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            # 64M
+            memory: "128Mi"
+            # 0.25 CPU
+            cpu: "250m"
+          limits:
+            # 128M
+            memory: "256Mi"
+            # 0.5 CPU
+            cpu: "500m"
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-web
+  namespace: dev
+  labels:
+    app: simple-web
+spec:
+  ports:
+    - name: http
+      port: 80
+  selector:
+    app: simple-web
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: simple-web
+  namespace: dev
+spec:
+  routes:                         
+  - kind: Rule
+    match: Path(`/`)
+    priority: 1                   
+    services:                     
+    - kind: Service
+      name: simple-web
+      namespace: dev
+      passHostHeader: true
+      port: 80                   
+      responseForwarding:
+        flushInterval: 1ms
+      scheme: http
