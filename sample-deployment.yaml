@@ -6,7 +6,7 @@ metadata:
 ---
 
 apiVersion: apps/v1
-kind: Deployment7
+kind: Deployment
 metadata:
   name: simple-web
   namespace: dev
